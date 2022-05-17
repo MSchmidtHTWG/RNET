@@ -16,9 +16,6 @@ class Server:
         if self.socketType == tcp:
             self.serverSocket.listen(2)
 
-    def close(self, connectionSocket):
-        connectionSocket.close()
-
     def threaded(self, connectionSocket):
         (id, result, clientAddress) = self.getMsg(connectionSocket)
         self.sendMsg(connectionSocket, clientAddress, id, result)
@@ -36,7 +33,7 @@ class Server:
                     connectionSocket = self.serverSocket
             if connectionSocket != '':
                 self.lock.acquire()
-                start_new_thread(self.threaded, (connectionSocket,))
+                start_new_thread(self.threaded, (connectionSocket))
                 connectionSocket = ''
                 self.lock.release()
 
