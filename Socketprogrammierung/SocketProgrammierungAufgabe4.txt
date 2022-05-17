@@ -41,8 +41,4 @@
 4.	notwendig wegen Paketverlust
 	try catch führt den try block aus und geht in den catch block wenn eine (bestimmte) exception geworfen wird
 	socket.setdefaulttimeout(9.3)
-5.	
-
-
-
-5.2
+5.	geht nicht. client konnte sich mit server verbinden, jedoch nicht Eingabe akzeptieren.
