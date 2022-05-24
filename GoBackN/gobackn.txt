@@ -1,5 +1,5 @@
 E2E Verzögerung
-Q ÜV: 2.25ms
+Q ÜV: 2ms
 Link1 ÜV: 1125B*8 / 3Mbps = 3ms
 Link1 AV: 2ms
 Link2 ÜV: 1125B*8 / 9Mbps = 1ms
@@ -14,17 +14,5 @@ Link4 AV: 1ms
 
 13ms 6/26 ; 2/26; 9/26; 9/26 
 
-2.)
-
-1/3 Verlust Q -> R1
-
-5 Pakte im Puffer
-15 / 3 = 5
-
-15 incoming 3 im Puffer
-
-12 / 3 = 4
-
-
-11 Pakete kommen an
+3.) Das letzte Paket kommt nach 233,5ms an, das dazugehörige ACK nach 248,5ms.
 
