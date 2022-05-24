@@ -1,0 +1,59 @@
+packet data size 1024B
+
+nickname
+1B nick len 1-256B nick
+1-256B
+
+1: register request
+1B msgtype 1B nick len 1-256B nick 4B ipv4 2B udp port
+10-265B
+
+2: register respone
+1B msgtype 1B num users 0-1021B user (1B nick len 1-256B nick 4B ipv4 2B udp port)
+2-1024B 3-123 user (9-264B per user)
+
+3: add user
+1B msgtype 1B nick len 1-256B nick 4B ipv4 2B udp port
+10-265B
+
+5: broadcast msg
+1B msgtype 1B msg len 1-256B msg
+4-515B
+
+6: broadcast
+1B msgtype 1B nick len 1-256B nick 1B msg len 1-256B msg
+5-771B
+
+7: logout
+1B msgtype
+
+8: remove user
+1B msgtype 1B nick len 1-256B nick
+2-257B
+==========================================================================================
+1: register request
+1B msgtype 4B ipv4 4B udp port 1-256B nick
+10-265B
+
+2: register respone
+1B msgtype 1B num users 0-1021B user (1B nick len 0-255B nick 4B ipv4 4B udp port)
+2-1024B 3-123 user (9-264B per user)
+
+3: add user
+1B msgtype 4B ipv4 4B udp port 1-256B nick
+10-265B
+
+5: broadcast msg
+1B msgtype 1-512B msg
+2-513B
+
+6: broadcast
+1B msgtype 1B nick len 1-256B nick 1-512B msg
+5-770
+
+7: logout
+1B msgtype
+
+8: remove user
+1B msgtype 1B 1-256B Nick
+2-257B
