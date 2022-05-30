@@ -29,7 +29,7 @@ nickname
 
 8: remove user
 1B msgtype 1B nick len 1-256B nick
-2-257B
+3-258B
 ==========================================================================================
 1: register request
 1B msgtype 4B ipv4 4B udp port 1-256B nick
