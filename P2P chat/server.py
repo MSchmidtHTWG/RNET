@@ -3,6 +3,7 @@ import socket
 import threading
 from struct import unpack, pack
 from _thread import *
+from .codec import *
 
 class Server:
     def __init__(self):
@@ -12,19 +13,27 @@ class Server:
         self.serverSocket.bind((self.ip, self.port))
         self.lock = threading.Lock()
         self.users = dict()
-        self.listen()
     
     def listen(self):
         while True:
             self.serverSocket.listen(2)
-            connectionSocket, addr = self.serverSocket.accept()
+            userSocket, addr = self.serverSocket.accept()
             #thread mit socket und addr erstellen
             self.lock.acquire()
-            start_new_thread(self.user, (connectionSocket, addr))
+            start_new_thread(self.user, (userSocket, addr))
             self.lock.release()
             
-    def user(self, connectionSocket, addr):
+    def user(self, userSocket, addr):
+        data = userSocket.rcv(1024)
+        if data[0] == 1:
+            pass
         # rcv reg req
         # update dict
         # wait for new msg
         pass
+    
+    def manageUserList(self):
+        pass
+    
+server = Server()
+start_new_thread(server.managerUserList, ())
