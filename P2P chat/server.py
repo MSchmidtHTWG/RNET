@@ -67,7 +67,7 @@ class Codec:
 
 class Server:
     def __init__(self):
-        self.port = 50
+        self.port = 5050
         self.ip = '127.0.0.1'
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serverSocket.bind((self.ip, self.port))
@@ -91,6 +91,9 @@ class Server:
             self.lock.acquire()
             self.users.update({nick : (decoded[1], decoded[2], userSocket)})
             print('added ' + nick)
+            # for user in self.users:
+            #     if self.users.get(user)[2] != userSocket:
+            #         self.users.get(user)[2].send(Codec.addUser_encode(nick, self.users.get(nick)[0], self.users.get(nick)[1]))
             self.lock.release()
             self.register_response(userSocket, nick)
         else:
@@ -101,9 +104,13 @@ class Server:
             if data[0] == 5:
                 msg = Codec.broadcastMsg_decode(data)
                 self.lock.acquire()
+                nick = ""
+                for user in self.users:
+                    if self.users.get(user)[2] == userSocket:
+                        nick = user
                 for user in self.users:
                     if self.users.get(user)[2] != userSocket:
-                        self.users.get(user)[2].send(Codec.broadcast_encode(user, msg))
+                        self.users.get(user)[2].send(Codec.broadcast_encode(nick, msg))
                 self.lock.release()
             elif data[0] == 7:
                 self.lock.acquire()
@@ -123,6 +130,8 @@ class Server:
         for user in self.users:
             # if user != nick:
             userSocket.send(Codec.registerResponse_encode(user, self.users.get(user)[0], self.users.get(user)[1]))
+            if user != nick:
+                self.users.get(user)[2].send(Codec.addUser_encode(nick, self.users.get(nick)[0], self.users.get(nick)[1]))
         self.lock.release()
         return
     

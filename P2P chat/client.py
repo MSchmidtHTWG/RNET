@@ -1,6 +1,7 @@
 import pstats
 import socket
 import threading
+import time
 from struct import unpack, pack
 from _thread import *
 
@@ -74,15 +75,18 @@ class Client:
         # self.tcp_port = int(input('Your tcp port:'))
         # self.udp_port = int(input ('Your udp port:'))
         self.serverIP = '127.0.0.1'
-        self.serverPort = 50
+        self.serverPort = 5050
         # self.nick = 'max'
         # self.ip = '127.0.0.2'
-        self.tcp_port = 51
-        self.udp_port = 52
+        self.tcp_port = 5051
+        self.udp_port = 5052
+        self.chat_sockets = dict()
+        self.openPort = 5053
         self.tcp_socket = None
         self.udp_socket = None
         self.users = dict()
         self.lock = threading.Lock()
+        self.chats = dict()
         
     def connect(self):
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -92,6 +96,7 @@ class Client:
         self.tcp_socket.connect((self.serverIP, self.serverPort))
         self.tcp_socket.send(Codec.registerRequest_encode(self.nick, self.ip, self.udp_port))
         self.tcp_socket.settimeout(1)
+        #self.chat_tcp_socket.bind((self.ip, self.chat_tcp_port))
         while True:
             try:
                 data = self.tcp_socket.recv(1024)
@@ -102,11 +107,13 @@ class Client:
                 self.tcp_socket.settimeout(0)
                 break
         start_new_thread(self.listenToServer, ())
+        start_new_thread(self.listenForRequests, ())
+        self.test()
             
     def test(self):
         print(self.users)
         while True:
-            x = input('list; broadcast; exit\n')
+            x = input('list; broadcast; exit; chat; send\n')
             if x == 'exit':
                 self.tcp_socket.send(Codec.logout_encode())
                 self.tcp_socket.close()
@@ -119,11 +126,36 @@ class Client:
             elif x == 'broadcast':
                 msg = input('What message do you want to broadcast?\n')
                 self.tcp_socket.send(Codec.broadcastMsg_encode(msg))
+            elif x == 'chat':
+                y = input('Who do you want to chat to?\n')
+                partner = self.users.get(y)
+                if partner != None:
+                    self.lock.acquire()
+                    # print(1)
+                    # print(partner)
+                    # print(y)
+                    newSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    newSocket.bind((self.ip, self.openPort))
+                    self.udp_socket.sendto(pack(f'=H', self.openPort), partner)
+                    newSocket.listen(2)
+                    partnerSocket, address = newSocket.accept()
+                    # print(2)
+                    self.chat_sockets.update({y : partnerSocket})
+                    start_new_thread(self.listenForMessages, (partner, newSocket))
+                    self.openPort += 1
+                    self.lock.release()
+                    
+            elif x == 'send':
+                y = input('Who do you want to send a message to?\n')
+                partner = self.chat_sockets.get(y)
+                if partner != None:
+                    z = input('What message do you want to send to ' + y + '?\n')
+                    partner.send(z.encode('utf-8'))
             
     def listenToServer(self):
         while True:
             try:
-                data = self.tcp_socket.recvfrom(1024)
+                data = self.tcp_socket.recv(1024)
                 if data[0] == 3:
                     self.lock.acquire()
                     nick, ip, port = Codec.addUser_decode(data)
@@ -142,9 +174,38 @@ class Client:
                 
     def listenForRequests(self):
         while True:
-            data = self.udp_socket.recv(1024)
-        pass
-            
+            try:
+                data, address = self.udp_socket.recvfrom(1024)
+                self.lock.acquire()
+                #  print(3)
+                partner = ""
+                for user in self.users:
+                    if self.users.get(user) == address:
+                        partner = user
+                        # break
+                # print(partner)
+                # print(unpack(f'=H', data)[0])
+                # print(address)
+                newSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                newSocket.bind((self.ip, self.openPort))
+                time.sleep(1)
+                newSocket.connect((address[0], unpack(f'=H', data)[0]))
+                # print(4)
+                self.chat_sockets.update({partner : newSocket})
+                self.openPort += 1
+                start_new_thread(self.listenForMessages, (partner, newSocket))
+                self.lock.release()
+                
+            except:
+                pass
+    
+    def listenForMessages(self, user , chatSocket):
+        while True:
+            try:
+                data = chatSocket.recv(1024)
+                print(user + ' wrote: ' + data.decode('utf-8'))
+            except:
+                pass
+        
 client = Client()
 client.connect()
-client.test()
