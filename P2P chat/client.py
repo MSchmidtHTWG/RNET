@@ -114,6 +114,7 @@ class Client:
         print(self.users)
         while True:
             x = input('list; broadcast; exit; chat; send\n')
+            print(self.chat_sockets)
             if x == 'exit':
                 self.tcp_socket.send(Codec.logout_encode())
                 self.tcp_socket.close()
@@ -141,10 +142,9 @@ class Client:
                     partnerSocket, address = newSocket.accept()
                     # print(2)
                     self.chat_sockets.update({y : partnerSocket})
-                    start_new_thread(self.listenForMessages, (partner, newSocket))
+                    start_new_thread(self.listenForMessages, (partner, partnerSocket))
                     self.openPort += 1
-                    self.lock.release()
-                    
+                    self.lock.release()    
             elif x == 'send':
                 y = input('Who do you want to send a message to?\n')
                 partner = self.chat_sockets.get(y)
@@ -186,20 +186,20 @@ class Client:
                 # print(partner)
                 # print(unpack(f'=H', data)[0])
                 # print(address)
-                newSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                newSocket.bind((self.ip, self.openPort))
-                time.sleep(1)
-                newSocket.connect((address[0], unpack(f'=H', data)[0]))
-                # print(4)
-                self.chat_sockets.update({partner : newSocket})
-                self.openPort += 1
-                start_new_thread(self.listenForMessages, (partner, newSocket))
-                self.lock.release()
-                
+                if partner != "":
+                    newSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    newSocket.bind((self.ip, self.openPort))
+                    time.sleep(1)
+                    newSocket.connect((address[0], unpack(f'=H', data)[0]))
+                    # print(4)
+                    self.chat_sockets.update({partner : newSocket})
+                    self.openPort += 1
+                    start_new_thread(self.listenForMessages, (partner, newSocket))
+                self.lock.release()  
             except:
                 pass
     
-    def listenForMessages(self, user , chatSocket):
+    def listenForMessages(self, user, chatSocket):
         while True:
             try:
                 data = chatSocket.recv(1024)
